@@ -7,14 +7,14 @@ print_usage()
 {
 	echo '
 NAME
-       build-sqlite-android
+       build-sqlite-ios
 
 SYNOPSIS
-       build-sqlite-android [options]
-       Example: ./build-sqlite-android.sh
+       build-sqlite-ios [options]
+       Example: ./build-sqlite-ios.sh
 
 DESCRIPTION
-       Auto build sqlite for android script.
+       Auto build sqlite for ios script.
 
 OPTIONS
        -h, --help
@@ -25,7 +25,7 @@ parse_options()
 {
 	options=$($CMD_GETOPT -o h \
 												--long "help" \
-												-n 'build-sqlite-android' -- "$@");
+												-n 'build-sqlite-ios' -- "$@");
 	eval set -- "$options"
 	while true; do
 		case "$1" in
@@ -58,8 +58,8 @@ download_tarball()
 {
 	if [ ! -e "$TARBALL_DIR/.$SQLITE_NAME" ]; then
 		sqlite_url="$SQLITE_BASE_URL/$SQLITE_TARBALL";
-		echo curl "$sqlite_url" --output "$TARBALL_DIR/$SQLITE_TARBALL";
-		curl "$sqlite_url" --output "$TARBALL_DIR/$SQLITE_TARBALL";
+		echo sqlite "$sqlite_url" --output "$TARBALL_DIR/$SQLITE_TARBALL";
+		sqlite "$sqlite_url" --output "$TARBALL_DIR/$SQLITE_TARBALL";
 		echo "$sqlite_url" > "$TARBALL_DIR/.$SQLITE_NAME";
 	fi
 
@@ -74,18 +74,20 @@ build_sqlite()
 	loginfo "$SQLITE_TARBALL has been unpacked."
 	cd "$SQLITE_BUILDDIR/$SQLITE_NAME";
 
+	#export CFLAGS="-DSQLITE_NOHAVE_SYSTEM"
 	./configure --prefix=$OUTPUT_DIR \
-		--host=arm-linux-androideabi \
-		--target=arm-linux-androideabi \
+		--host=arm-apple-darwin \
+		--with-ssl=$OUTPUT_DIR \
 		--enable-static \
-		--disable-shared
+		--disable-shared \
+		--disable-static-shell
 
 	make -j$MAX_JOBS libsqlite3.la && make install-libLTLIBRARIES install-includeHEADERS install-pkgconfigDATA
 }
 
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd);
 source "$SCRIPT_DIR/base.sh";
-source "$SCRIPT_DIR/setenv-android.sh";
+source "$SCRIPT_DIR/setenv-ios.sh";
 
 SQLITE_BASE_URL="https://www.sqlite.org/2018";
 SQLITE_VERSION="autoconf-3250300";
